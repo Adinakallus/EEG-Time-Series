@@ -97,7 +97,11 @@ print("F_w", F_w)
 # endregion
 
 
-# region Formula 5-Correlation
+
+
+ # region Formula 5-Correlation
+
+
 
 def correlation_sum(X, epsilon):
     N = len(X)
@@ -128,58 +132,168 @@ def partial_correlation_sum(X, epsilon):
 
 
 def calculate_d(X, epsilon):
-    # Calculate C(E, N)
-    C_value = correlation_sum(X, epsilon)
+    N = len(X)
+    T = 5
+    sum_total = 0
+    for i in range(N - T):
+        for j in range(i + T, N):
+            distance = np.linalg.norm(X[i] - X[j])
+            if epsilon > distance:
+                sum_total += 1
+    normalization = 2 / ((N - T) * (N - T - 1))
+    C_value = normalization * sum_total
 
-    # Calculate C(E, N)'/E' using the approximation
-    partial_C_value = partial_correlation_sum(X, epsilon)
+    # Calculate the partial correlation sum
+    sum_total_partial = 0
+    for i in range(N - T):
+        for j in range(i + T, N):
+            distance = np.linalg.norm(X[i] - X[j])
+            if abs(distance - epsilon) == 0:
+                sum_total_partial += 1
+    partial_C_value = normalization * sum_total_partial
 
     if C_value == 0:
-        print("Warning: C(E, N) is zero.")
         return np.nan
 
-    # Calculate d(E, N) = (C(ε, N)'/E') / C(E, N)
     derivative = partial_C_value / C_value
     return derivative
 
-
-x = data.reshape(1, -1)
-print("reshaped data:", data)
-
-
-# endregion
-
 def run_calculate_d_on_epsilon_range(data):
+    # Generate epsilon values: 2^-8, 2^-7, ..., 2^-1, 0
+    epsilon_values = np.array([2**-i for i in range(8, 0, -1)] + [0])
     results = []
-    epsilon_values = np.arange(0, 1.1, 0.1)  # Epsilon runs from 0 to 1 with a step of 0.1
 
     for epsilon in epsilon_values:
-        if epsilon > 0:  # Ensure we're not taking log2 of zero
-            # log2_epsilon = np.log2(epsilon)
-            # if np.isfinite(log2_epsilon):  # Check if log2 is a valid number
+        if epsilon > 0:  # Ensure we don't run into division by zero
+            print(f"Calculating for epsilon = {epsilon}")
             result = calculate_d(data, epsilon)
-            print("result for epsilon =", epsilon, "is:", result)
             results.append(result)
-
         else:
-            results.append(np.nan)  # For epsilon = 0, result is undefined
+            results.append(np.nan)  # Handle zero epsilon separately
 
     return epsilon_values, results
 
+# List of file paths
+file_paths = [
+    'C:/Users/adina/Downloads/Seminar/Seminar/Z/Z001.txt',
+    'C:/Users/adina/Downloads/Seminar/Seminar/F/F001.txt',
+    'C:/Users/adina/Downloads/Seminar/Seminar/O/O001.txt',
+    'C:/Users/adina/Downloads/Seminar/Seminar/S/S001.txt',
+    'C:/Users/adina/Downloads/Seminar/Seminar/N/N001.txt'
+]
 
-data = (data - np.min(data)) / (np.max(data) - np.min(data))
-print("data:", data)
-# Assuming `data` is your input dataset
-epsilon_values, result = run_calculate_d_on_epsilon_range(data)
+# Loop over all datasets and generate plots
+for file_path in file_paths:
+    print(f"Processing file: {file_path}")
+    data = np.loadtxt(file_path)
 
-# Plotting
+    # Normalize the data
+    data = (data - np.min(data)) / (np.max(data) - np.min(data))
+
+    # Run the calculation
+    epsilon_values, results = run_calculate_d_on_epsilon_range(data)
+
+    # Plot results for each dataset individually
+    plt.figure(figsize=(10, 6))
+    plt.plot(epsilon_values, results, marker='o', label=f'{file_path.split("/")[-1]}')
+    plt.xlabel('Epsilon')
+    plt.ylabel('d(E, N)')
+    plt.title(f'd(E, N) vs. Epsilon for {file_path.split("/")[-1]}')
+    plt.grid(True)
+    plt.legend(loc='best')
+    # Save individual plot
+    individual_plot_filename = f'{file_path.split("/")[-1].split(".")[0]}_plot.png'
+    plt.savefig(individual_plot_filename)
+    print(f"Saved plot for {file_path} as {individual_plot_filename}")
+    plt.close()
+
+# Final plot with all datasets together
 plt.figure(figsize=(10, 6))
-plt.plot(epsilon_values, result, marker='o', color='b', label='d(E, N)')
+for file_path in file_paths:
+    data = np.loadtxt(file_path)
+
+    # Normalize the data
+    data = (data - np.min(data)) / (np.max(data) - np.min(data))
+
+    # Run the calculation
+    epsilon_values, results = run_calculate_d_on_epsilon_range(data)
+
+    # Plot results for each dataset
+    plt.plot(epsilon_values, results, marker='o', label=f'{file_path.split("/")[-1]}')
+
 plt.xlabel('Epsilon')
 plt.ylabel('d(E, N)')
-plt.title('Plot of d(E, N) vs. Epsilon')
+plt.title('Plot of d(E, N) vs. Epsilon for Different Datasets')
 plt.grid(True)
-plt.legend()
+plt.legend(loc='best')
+
+# Save the final combined plot
+final_plot_filename = 'combined_plot.png'
+plt.savefig(final_plot_filename)
+print(f"Saved final combined plot as {final_plot_filename}")
 plt.show()
+#endregion
 
-
+# def calculate_d(X, epsilon):
+#     # Calculate C(E, N)
+#     C_value = correlation_sum(X, epsilon)
+#
+#     # Calculate C(E, N)'/E' using the approximation
+#     partial_C_value = partial_correlation_sum(X, epsilon)
+#
+#     if C_value == 0:
+#         print("Warning: C(E, N) is zero.")
+#         return np.nan
+#
+#     # Calculate d(E, N) = (C(ε, N)'/E') / C(E, N)
+#     derivative = partial_C_value / C_value
+#     return derivative
+#
+#
+# x = data.reshape(1, -1)
+# print("reshaped data:", data)
+#
+#
+# # endregion
+# def run_calculate_d_on_epsilon_range(data):
+#     epsilon_values = np.linspace(1/256, 0, num=100)  # 100 points from 1/256 to 0
+#     results = []
+#
+#     for epsilon in epsilon_values:
+#         if epsilon > 0:  # Ensure we don't run into division by zero
+#             result = calculate_d(data, epsilon)
+#             results.append(result)
+#         else:
+#             results.append(np.nan)  # Handle zero epsilon separately
+#
+#     return epsilon_values, results
+#
+# plt.figure(figsize=(10, 6))
+#
+# # Loop over all datasets
+# file_paths = [
+#     'C:/Users/adina/Downloads/Seminar/Seminar/Z/Z001.txt',
+#     'C:/Users/adina/Downloads/Seminar/Seminar/F/F001.txt',
+#     'C:/Users/adina/Downloads/Seminar/Seminar/O/O001.txt',
+#     'C:/Users/adina/Downloads/Seminar/Seminar/S/S001.txt',
+#     'C:/Users/adina/Downloads/Seminar/Seminar/N/N001.txt'
+# ]
+# for file_path in file_paths:
+#     data = np.loadtxt(file_path)
+#
+#     # Normalize the data
+#     data = (data - np.min(data)) / (np.max(data) - np.min(data))
+#
+#     # Run the calculation
+#     epsilon_values, result = run_calculate_d_on_epsilon_range(data)
+#
+#     # Plot results for each dataset
+#     plt.plot(epsilon_values, result, marker='o', label=f'{file_path.split("/")[-1]}')
+#
+# plt.xlabel('Epsilon')
+# plt.ylabel('d(E, N)')
+# plt.title('Plot of d(E, N) vs. Epsilon for Different Datasets')
+# plt.grid(True)
+# plt.legend(loc='best')
+# plt.show()
+#
