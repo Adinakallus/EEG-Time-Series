@@ -102,7 +102,7 @@ print("F_w", F_w)
  # region Formula 5-Correlation
 
 
-
+#C(E,N)
 def correlation_sum(X, epsilon):
     N = len(X)
     T = 5
@@ -116,7 +116,7 @@ def correlation_sum(X, epsilon):
     normalization = 2 / ((N - T) * (N - T - 1))
     return normalization * sum_total
 
-
+#נגזרת
 def partial_correlation_sum(X, epsilon):
     N = len(X)
     T = 5
@@ -124,39 +124,22 @@ def partial_correlation_sum(X, epsilon):
     for i in range(N - T):
         for j in range(i + T, N):
             distance = np.linalg.norm(X[i] - X[j])
-            # print("distance:", distance)
+            # זה השורה שצריך לוודא עם גיא
             if abs(distance - epsilon) == 0:
                 sum_total += 1
     normalization = 2 / ((N - T) * (N - T - 1))
     return normalization * sum_total
 
-
+#d(e,n)
 def calculate_d(X, epsilon):
-    N = len(X)
-    T = 5
-    sum_total = 0
-    for i in range(N - T):
-        for j in range(i + T, N):
-            distance = np.linalg.norm(X[i] - X[j])
-            if epsilon > distance:
-                sum_total += 1
-    normalization = 2 / ((N - T) * (N - T - 1))
-    C_value = normalization * sum_total
+   c_sum=correlation_sum(X,epsilon)
+   # Calculate the partial correlation sum
+   c_derivative=partial_correlation_sum(X,epsilon)
+   if c_sum == 0:
+       return np.nan
 
-    # Calculate the partial correlation sum
-    sum_total_partial = 0
-    for i in range(N - T):
-        for j in range(i + T, N):
-            distance = np.linalg.norm(X[i] - X[j])
-            if abs(distance - epsilon) == 0:
-                sum_total_partial += 1
-    partial_C_value = normalization * sum_total_partial
-
-    if C_value == 0:
-        return np.nan
-
-    derivative = partial_C_value / C_value
-    return derivative
+   derivative = c_derivative / c_sum
+   return derivative*epsilon
 
 def run_calculate_d_on_epsilon_range(data):
     # Generate epsilon values: 2^-8, 2^-7, ..., 2^-1, 0
