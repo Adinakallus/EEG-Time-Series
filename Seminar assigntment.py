@@ -3,7 +3,6 @@ from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
 
-
 # region Formula 1- Average deviation of amplitudes
 
 def calculate_mx_j(segment):
@@ -12,12 +11,10 @@ def calculate_mx_j(segment):
     mx_j = np.sum(np.abs(segment - x_mean)) / N_star
     return mx_j
 
-
 def get_all_mxj(data):
     num_segments = 16
     segment_length = len(data) // num_segments
     mx_values = []
-
     for j in range(num_segments):
         segment = data[j * segment_length:(j + 1) * segment_length]
         mx_j = calculate_mx_j(segment)
@@ -28,7 +25,6 @@ def get_all_mxj(data):
 
 data = np.loadtxt('C:/Users/adina/Downloads/Seminar/Seminar/Z/Z001.txt')
 print(get_all_mxj(data))
-
 
 # endregion
 
